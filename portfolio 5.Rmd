@@ -1,0 +1,129 @@
+---
+title: "porfolio 5"
+name: "Keyu Wu"
+output: html_document
+---
+
+```{r data}
+library(tidyverse)
+library(readr)
+library(dplyr)
+library(broom)
+Admission <- read_csv("Admission.csv")
+```
+
+"The dataset is retrieved from Kaggle by Mohan S Acharya. Inspired by lab 9 & 10, my goal of this portfolio is to investigate predictors of students' chance of admission."
+
+```{r variables_coding}
+#GRE Scores ( out of 340 )
+#TOEFL Scores ( out of 120 )
+#University Rating ( out of 5 )
+#Statement of Purpose and Letter of Recommendation Strength ( out of 5 )
+#Undergraduate GPA ( out of 10 )
+#Research Experience ( either 0 or 1 )
+#Chance of Admit ( ranging from 0 to 1 )
+```
+
+"It should be stated that the chance of admit is also obtained from students. Researchers have asked them how confident that they think they will be admitted based on the information they provided. It will be quite interesting if I can compare their chance of admit to their actual admission status. However, I failed to find any actual admission dataset. Therefore, I would like to explore which variable will predict the student's self-rated chance of admit."
+
+### 1. Visual glimpse at the relationship between each predictor and students' chance of admit.
+
+```{r gre}
+ggplot(Admission, aes(x = GREScore,
+                      y = ChanceofAdmit)) +
+  geom_jitter() +
+  stat_smooth(method = lm, color = "orange")
+```
+
+```{r toefl}
+ggplot(Admission, aes(x = TOEFLScore,
+                      y = ChanceofAdmit)) +
+  geom_jitter() +
+  stat_smooth(method = lm, color = "orange")
+```
+
+"Compared visually, the slopes for GRE and TOEFL are similar and the positive linear relationship indicates that as their standardized scores get higher, their confidence of getting admitted is also higher."
+
+```{r university}
+ggplot(Admission, aes(x = UniversityRating,
+                      y = ChanceofAdmit)) +
+  geom_jitter() +
+  stat_smooth(method = lm, color = "orange")
+```
+
+```{r sop}
+ggplot(Admission, aes(x = SOP,
+                      y = ChanceofAdmit)) +
+  geom_jitter() +
+  stat_smooth(method = lm, color = "orange")
+```
+
+```{r lor}
+ggplot(Admission, aes(x = LOR,
+                      y = ChanceofAdmit)) +
+  geom_jitter() +
+  stat_smooth(method = lm, color = "orange")
+```
+
+```{r}
+Admission$Research <- factor(Admission$Research)
+ggplot(Admission, aes(x = CGPA,
+                      y = ChanceofAdmit,
+                      color = Research)) +
+  geom_jitter() +
+   stat_smooth(method = lm, color = "orange")
+```
+
+"As shown in the diagrams, all indicators are positively correlated with the chance of admit. For students who have higher GPA and have researcher experience, their chance of admit also increase."
+
+### 2. Simple linear regression
+
+```{r}
+m_gpa <- lm(data = Admission, ChanceofAdmit ~ CGPA)
+summary(m_gpa)
+```
+
+"for each additional increase in the GPA, the chance of admit is expected to be higher, on average, by 0.2. If the student gets a 0 in GPA, he/she will receive a -1.07 chance of admit. (it does not make sense because 0 in GPA does not have meaning and the chance of admission should not be negative/over 1.) GPA accounts for 76.2% of the variance in chance of admit."
+
+```{r}
+m_gre <- lm(data = Admission, ChanceofAdmit ~ GREScore)
+summary(m_gre)
+```
+
+```{r}
+m_toefl <- lm(data = Admission, ChanceofAdmit ~ TOEFLScore)
+summary(m_toefl)
+```
+
+```{r}
+m_rating <- lm(data = Admission, ChanceofAdmit ~ UniversityRating)
+summary(m_rating)
+```
+
+```{r}
+m_sop <- lm(data = Admission, ChanceofAdmit ~ SOP)
+summary(m_sop)
+```
+
+```{r}
+m_lor <- lm(data = Admission, ChanceofAdmit ~ LOR)
+summary(m_lor)
+```
+
+"With the results of the simple linear regressions, it is shown that the adjusted R squared of GPA (76.2%) > GRE (64.3%) > TOEFL (62.6%) > university rating (50.4%) > SOP (45.4%) > LOR （44.7%). These results are also significant, suggesting that all variables are robust predictors of students' chance of admit."
+
+### 3. Multiple regression
+
+```{r}
+m_admission <- lm(data = Admission, ChanceofAdmit ~ GREScore+TOEFLScore+UniversityRating+SOP+LOR+CGPA+Research)
+summary(m_admission)
+```
+
+```{r}
+m_admission_fit <- lm(data = Admission, ChanceofAdmit ~ GREScore+TOEFLScore+LOR+CGPA+Research)
+summary(m_admission_fit)
+```
+
+"Putting all predictors into the model, it is surprising that university rating and LOP are no longer signifcant. The adjusted R-squared is almost 80%, suggesting that this multiple regression appropriately predicts one's self-evaluation on his/her chance of admission. Hence, the best fit model is: Chance of admit = 0.002 (GRE score) + 0.003 (TOEFL score) + 0.024 (LOR) + CGPA (0.123) + 0.025 (Research) - 1.463.
+
+It is a little surprising that students pay more attention to their GPA, GRE and TOEFL scores (as these adjusted R-squared are so high that these variables account the majority variance of their chance of admit) than research experience and letter of recommendation. I went back to the dataset and realized that it was an indian sample. From my perspective, students from Asia tend to focus extensively on getting high grades on the standardized tests. Maybe there will be less uncertainties in studying on tests compared to research quality and strength of the recommendation letters (both may depend on other things/people). I wonder if this conclusion would replicate in Western countries or there could be some cultural differences!"
