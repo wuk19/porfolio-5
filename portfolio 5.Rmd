@@ -1,14 +1,13 @@
 ---
 title: "porfolio 5"
 name: "Keyu Wu"
-output: html_document
+output: github_document
 ---
 
 ```{r data}
 library(tidyverse)
 library(readr)
 library(dplyr)
-library(broom)
 Admission <- read_csv("Admission.csv")
 ```
 
